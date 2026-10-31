@@ -1,31 +1,54 @@
 # MoonBinaural
 
-MoonBit双耳FIR流式渲染核心。复核更新0.2.0，模块名november/moon_binaural为本地开发命名空间，未发布。
+实测HRIR驱动的离线方向轨迹与多声源双耳渲染，主要业务机制由MoonBit实现，Apache-2.0。
 
-输入单声道采样与同采样率的左右HRIR；输出左右耳采样。核心实现Hrir、Renderer、球面最近测量点选择、跨块历史、双滤波器线性交叉淡化及尾部排空。完整API见pkg.generated.mbti。与分析房间衰减时间的roomacoustics职责不同，不把WAV或FFT解析作为新增贡献。
+从单声道采样、实测耳部响应与方向关键帧，渲染左右耳音频；多个声源使用独立历史、不同起始时刻和增益，再混合导出。
 
-```powershell
-moon run cmd/main --target js -- examples/impulse.json
-moon run cmd/main --target js -- examples/measured-hrir.json
-moon test --target wasm --deny-warn
+## 可运行任务
+
+```sh
+moon run cmd/main --target js -- examples/two-sources.json
+moon run cmd/main --target js -- examples/moving-sadie.json
 ```
 
-CLI读取JSON的left/right滤波器和blocks采样块，返回每块左右输出及M-1尾部。空块不推进时间。transition提供流式公共API；CLI增加measurements/keyframes场景输入，能够执行动态方向渲染。drain是追加M-1个零，每次调用都会推进状态，不是幂等结束操作。新旧滤波器共用完整历史，过渡结束不丢尾部；过渡期间再次请求切换明确拒绝。
+双源例左耳输出[1,1.5,0.5]，峰值1.5，左右合计2个超幅采样；合成短音配两份固定实测HRIR的方向轨迹输出12255帧、48kHz立体声。
 
-examples/measured-hrir.json由上级verify.py从固定上游实测HRIR解码生成；examples/measured-tone.wav是MoonBit渲染输出的440Hz合成短音，Python仅封装PCM。上游为Google spatial-media固定提交2308497c39bb604a7c3ba56ac17e302f2b1b6a96，SADIE衍生KU100，256 taps，48kHz。来源、SHA-256及数值误差在../../evidence/validation.json；上游原始README、LICENSE、NOTICE随testdata保留。
+measurements给定方向和左右滤波器；sources为samples、keyframes、start、gain的数组。只有指定output时才写WAV，已有目标拒绝覆盖；示例默认只输出JSON，不需要修改已有音频。
 
-信号仍需由调用方保持正确采样率。当前最近方向选择不插值；没有SOFA导入、重采样、分区FFT、多声源、浏览器声卡或实时音频线程保证。HRIR适配个人听感未经真人听测，不能从数值一致性推出定位准确性。
+CLI读取JSON文件，ok表示计算执行成功；领域可行性、超时或削波需读取各自字段。Node只读写文件、设置退出码和封装PCM；核心算法不转发给Python/C或外部服务。
 
-直接FIR复杂度O(N*M)，过渡期间两次卷积。M<=4096，一块N<=1,000,000且N*M<=16,000,000；输入和滤波系数均须有限且绝对值<=1e6。输出不自动归一化/限幅，调用者需监测峰值。核心返回Double采样；CLI的可选WAV输出做显式饱和量化，并以排他创建拒绝覆盖。
+## 可复用接口与安装
 
-核心与JS读取宿主分离。数值对照以独立Python卷积核对全部输出和尾部；真实外部数据仅指HRIR，不声称真实用户部署。运行上级verify.py重现三后端测试和对照。
+```sh
+moon add btlqql/moon_binaural@0.3.0
+```
 
-实现代码Apache-2.0，AI辅助制作；实测HRIR遵循testdata/LICENSE及NOTICE。没有移植Web Audio/Steam Audio的渲染器代码，未发明HRTF算法。
+在moon.pkg导入`"btlqql/moon_binaural" @core`；完整签名见[pkg.generated.mbti](pkg.generated.mbti)。
 
-## 0.2.0复核增量
+双耳流式FIR、球面最近测量点、共享历史交叉淡化、关键帧场景、分块尾部排空、多源独立卷积和带增益/起点混合、峰值与超幅统计、排他WAV导出。
 
-`render_scene`将带方向的HRIR测量集合、采样、绝对采样位置关键帧连接起来，最近方向选择后在同一历史上交叉淡化，返回完整尾部、峰值和双耳超幅采样数。采样率必须相同，最多240000个输入采样、512个关键帧及64000000个N*M预算。HRIR等长；关键帧严格递增，从0开始，相邻后续切换不能覆盖尚未结束的淡化。
+## 验证
 
-`moon run cmd/main --target js -- examples/moving-sadie.json`使用两份固定SADIE衍生KU100 HRIR生成双声道WAV。output路径相对执行目录解析，已有输出拒绝覆盖；示例JSON使用项目目录下的绝对D盘路径。JSON不含output时只返回采样和统计。原测量许可证与新增数据随testdata保留。
+```sh
+moon check --target all --deny-warn
+moon test --target js --deny-warn
+moon test --target wasm --deny-warn
+moon test --target wasm-gc --deny-warn
+python scripts/verify.py
+```
 
-4096抽头的drain已改为分块排空，完整支持所声明最大长度，不再因单块乘加限额失败。
+当前8项MoonBit测试。独立开发对照：两份固定SADIE衍生KU100 HRIR，动态逐采样双卷积/淡化对照误差约1.11e-15；独立多源线性叠加、WAV元数据与排他输出验证。
+
+脚本只需要Python标准库、Node与MoonBit；可用MOON_BIN指定moon路径。产物保存在本仓库_build/oracle，脚本不下载外部库，不访问相邻工作区。CI覆盖JS/Wasm/Wasm-GC/native，实际运行状态见[Actions](https://github.com/btlqql/moon-binaural/actions)。本地验证和公共CI结论分别记录，不用静态检查冒称native运行。
+
+## 实现边界与来源
+
+离线直接FIR，复杂度O(N*M)，切换期间双卷积。没有分区FFT、任意音频文件/ SOFA导入、重采样或实时线程保证。测量方向取最近点，输出淡化不是ITD保持的HRTF插值。当前源信号合成，HRIR来自外部实测，没有真人听测。
+
+对照详见[ECOSYSTEM](docs/ECOSYSTEM.md)，归属见[THIRD_PARTY](THIRD_PARTY.md)。实例是软件模型或合成输入，不是生产部署证明。
+
+## 申报与开发记录
+
+[完整版Markdown申报书](docs/proposal.md) | [一页Markdown摘要](docs/proposal-summary.md) | [实际提交历史](https://github.com/btlqql/moon-binaural/commits/main/)
+
+版本0.3.0。GitHub提交保留真实时间与每次文件变化；不以数量替代独立价值和实际质量。十一月规则尚未从公开页面完整确认，开源发布不等于比赛报名或验收通过。
