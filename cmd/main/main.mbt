@@ -108,22 +108,34 @@ fn scene(j : Json) -> Json raise {
       ),
     })
   }
-  let frames : Array[@core.Keyframe] = []
-  for f in arr(field(j, "keyframes")) {
-    frames.push({
-      at: integer(field(f, "at")),
-      direction: direction(field(f, "direction")),
-    })
-  }
   let rate = integer(field(j, "sample_rate"))
-  let result = @core.render_scene(
-    doubles(field(j, "input")),
-    measurements,
-    frames,
-    rate,
-    integer(field(j, "hrir_rate")),
-    integer(field(j, "fade_samples")),
-  )
+  let result = if j is Object(fields) && fields.get("sources") is Some(rows) {
+    let sources : Array[@core.Source] = []
+    for row in arr(rows) {
+      sources.push({
+        samples: doubles(field(row, "samples")),
+        keyframes: parse_frames(field(row, "keyframes")),
+        start: integer(field(row, "start")),
+        gain: num(field(row, "gain")),
+      })
+    }
+    @core.render_mix(
+      sources,
+      measurements,
+      rate,
+      integer(field(j, "hrir_rate")),
+      integer(field(j, "fade_samples")),
+    )
+  } else {
+    @core.render_scene(
+      doubles(field(j, "input")),
+      measurements,
+      parse_frames(field(j, "keyframes")),
+      rate,
+      integer(field(j, "hrir_rate")),
+      integer(field(j, "fade_samples")),
+    )
+  }
   let output = if j is Object(fields) &&
     fields.get("output") is Some(String(path)) {
     if !write_wav(
@@ -150,4 +162,16 @@ fn scene(j : Json) -> Json raise {
     "clipped_samples": Json(result.clipped_samples),
     "output": output,
   })
+}
+
+///|
+fn parse_frames(j : Json) -> Array[@core.Keyframe] raise {
+  let frames : Array[@core.Keyframe] = []
+  for f in arr(j) {
+    frames.push({
+      at: integer(field(f, "at")),
+      direction: direction(field(f, "direction")),
+    })
+  }
+  frames
 }
