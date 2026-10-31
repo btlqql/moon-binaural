@@ -48,7 +48,7 @@ roomacoustics从房间IR反推混响时间、噪声底和模态；MoonSpectrum�
 
 案例一：输入单位脉冲和左右短HRIR，在不同块划分下逐采样核对输出及尾部，确认块边界不会重置历史。运行：moon run cmd/main --target js -- examples/impulse.json。
 
-案例二：使用固定Google spatial-media提交中的E35_A45.wav和E35_A-45.wav两份SADIE衍生KU100测量，均为48kHz、256抽头。输入12000个440Hz正弦采样，在位置0、4000、8000设置方向关键帧，淡化64采样。运行examples/moving-sadie.json导出12255帧双声道WAV，峰值约0.09706584，超幅采样数0。
+案例二：使用固定Google spatial-media提交中的E35_A45.wav和E35_A-45.wav两份SADIE衍生KU100测量，均为48kHz、256抽头。输入12000个440Hz正弦采样，在位置0、4000、8000设置方向关键帧，淡化64采样。验证时为examples/moving-sadie.json指定新的output路径，导出12255帧双声道WAV（例文件默认只返回JSON采样），峰值约0.09706584，超幅采样数0。
 
 复核脚本另用1200个随机源采样和位置400、800切换，对全部左右采样与尾部逐点核对。已有输出路径再次执行被拒绝且文件字节不变；源与HRIR采样率不同明确失败。示例输出路径在D盘，读取测量和封装音频的Python仅用于开发准备与验证。
 
@@ -66,7 +66,7 @@ roomacoustics从房间IR反推混响时间、噪声底和模态；MoonSpectrum�
 
 ## 八、公开接口、使用与当前边界
 
-API包括Hrir、Renderer::process/transition/drain、Measurement、Direction、Keyframe、select与render_scene。库适合嵌入MoonBit离线处理，CLI读取JSON采样和测量，不声称直接导入任意音频文件或SOFA数据库。
+API包括Hrir、Renderer::process/transition/drain、Measurement、Direction、Keyframe、select、render_scene、Source与render_mix。库适合嵌入MoonBit离线处理，CLI读取JSON采样和测量，不声称直接导入任意音频文件或SOFA数据库。
 
 当前直接FIR复杂度O(N*M)，过渡期间执行两次卷积；没有分区FFT、重采样、浏览器音频线程或低延迟实时保证。最近测量点与线性输出淡化不能等同于ITD保持的方向插值。drain每次推进时间，不是幂等终止操作；核心输出不自动限幅，导出PCM时才做饱和量化。
 
@@ -78,3 +78,7 @@ API包括Hrir、Renderer::process/transition/drain、Measurement、Direction、K
 - [公共CI](https://github.com/btlqql/moon-binaural/actions)包含四后端测试，实际完成状态与安装验证记录在发布核验报告，不预写未发生的运行结论。
 
 GitHub开发历史、公共包发布与比赛报名是不同事项。本项目为AI辅助开发，参赛者负责理解模型、取舍和质量。未代填比赛报名，也没有主办方通过回执。
+
+## 当前公共验证基线
+
+已验证代码提交：b136bdabda11eea5a0ad73dea8d6f05f0bb9d737；[四后端CI](https://github.com/btlqql/moon-binaural/actions/runs/41198987649)已实际完成。三个纯核心可在四后端测试，文件CLI为JS宿主。注册表发布和独立安装状态以配套发布核验记录为准。
