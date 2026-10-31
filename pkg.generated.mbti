@@ -2,6 +2,8 @@
 package "btlqql/moon_binaural"
 
 // Values
+pub fn render_mix(Array[Source], Array[Measurement], Int, Int, Int) -> SceneResult raise AudioError
+
 pub fn render_scene(Array[Double], Array[Measurement], Array[Keyframe], Int, Int, Int) -> SceneResult raise AudioError
 
 pub fn select(Array[Measurement], Direction) -> Hrir raise AudioError
@@ -53,6 +55,13 @@ pub(all) struct SceneResult {
   audio : Stereo
   peak : Double
   clipped_samples : Int
+}
+
+pub(all) struct Source {
+  samples : Array[Double]
+  keyframes : Array[Keyframe]
+  start : Int
+  gain : Double
 }
 
 pub(all) struct Stereo {
