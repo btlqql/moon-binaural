@@ -1,7 +1,7 @@
 supported_targets = "js"
 
 import {
-  "november/moon_binaural" @core,
+  "btlqql/moon_binaural" @core,
   "moonbitlang/core/env",
   "moonbitlang/core/json",
 }

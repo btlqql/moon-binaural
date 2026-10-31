@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "november/moon_binaural"
+package "btlqql/moon_binaural"
 
 // Values
 pub fn render_scene(Array[Double], Array[Measurement], Array[Keyframe], Int, Int, Int) -> SceneResult raise AudioError
