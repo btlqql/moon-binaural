@@ -11,7 +11,7 @@ moon run cmd/main --target js -- examples/two-sources.json
 moon run cmd/main --target js -- examples/moving-sadie.json
 ```
 
-双源例左耳输出[1,1.5,0.5]，峰值1.5，左右合计2个超幅采样；合成短音配两份固定实测HRIR的方向轨迹输出12255帧、48kHz立体声。
+双源示例的左耳输出[1,1.5,0.5]，峰值1.5，左右合计2个超幅采样；合成短音配两份固定实测HRIR的方向轨迹输出12255帧、48kHz立体声。
 
 measurements给定方向和左右滤波器；sources为samples、keyframes、start、gain的数组。只有指定output时才写WAV，已有目标拒绝覆盖；示例默认只输出JSON，不需要修改已有音频。
 
