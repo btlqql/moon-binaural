@@ -2,6 +2,8 @@
 package "november/moon_binaural"
 
 // Values
+pub fn render_scene(Array[Double], Array[Measurement], Array[Keyframe], Int, Int, Int) -> SceneResult raise AudioError
+
 pub fn select(Array[Measurement], Direction) -> Hrir raise AudioError
 
 // Errors
@@ -24,6 +26,11 @@ pub struct Hrir {
 }
 pub fn Hrir::new(Array[Double], Array[Double]) -> Self raise AudioError
 
+pub(all) struct Keyframe {
+  at : Int
+  direction : Direction
+}
+
 pub(all) struct Measurement {
   direction : Direction
   hrir : Hrir
@@ -41,6 +48,12 @@ pub fn Renderer::drain(Self) -> Stereo raise AudioError
 pub fn Renderer::new(Hrir) -> Self
 pub fn Renderer::process(Self, Array[Double]) -> Stereo raise AudioError
 pub fn Renderer::transition(Self, Hrir, Int) -> Unit raise AudioError
+
+pub(all) struct SceneResult {
+  audio : Stereo
+  peak : Double
+  clipped_samples : Int
+}
 
 pub(all) struct Stereo {
   left : Array[Double]

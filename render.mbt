@@ -147,7 +147,20 @@ pub fn Renderer::process(
 
 ///|
 pub fn Renderer::drain(self : Renderer) -> Stereo raise AudioError {
-  self.process(Array::make(self.history.length() - 1, 0.0))
+  let out : Stereo = { left: [], right: [], }
+  let mut remaining = self.history.length() - 1
+  while remaining > 0 {
+    let count = if remaining > 1024 { 1024 } else { remaining }
+    let block = self.process(Array::make(count, 0.0))
+    for x in block.left {
+      out.left.push(x)
+    }
+    for x in block.right {
+      out.right.push(x)
+    }
+    remaining -= count
+  }
+  out
 }
 
 ///|
