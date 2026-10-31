@@ -1,0 +1,52 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "november/moon_binaural"
+
+// Values
+pub fn select(Array[Measurement], Direction) -> Hrir raise AudioError
+
+// Errors
+pub(all) suberror AudioError {
+  InvalidAudio
+  InvalidDirection
+  TransitionBusy
+}
+
+// Types and methods
+pub(all) struct Direction {
+  x : Double
+  y : Double
+  z : Double
+}
+
+pub struct Hrir {
+  left : Array[Double]
+  right : Array[Double]
+}
+pub fn Hrir::new(Array[Double], Array[Double]) -> Self raise AudioError
+
+pub(all) struct Measurement {
+  direction : Direction
+  hrir : Hrir
+}
+
+pub struct Renderer {
+  mut current : Hrir
+  mut target : Hrir?
+  history : Array[Double]
+  mut cursor : Int
+  mut progress : Int
+  mut fade_length : Int
+}
+pub fn Renderer::drain(Self) -> Stereo raise AudioError
+pub fn Renderer::new(Hrir) -> Self
+pub fn Renderer::process(Self, Array[Double]) -> Stereo raise AudioError
+pub fn Renderer::transition(Self, Hrir, Int) -> Unit raise AudioError
+
+pub(all) struct Stereo {
+  left : Array[Double]
+  right : Array[Double]
+}
+
+// Type aliases
+
+// Traits
