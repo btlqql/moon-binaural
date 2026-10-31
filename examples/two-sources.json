@@ -1,0 +1,58 @@
+{
+  "measurements": [
+    {
+      "direction": {
+        "x": 1,
+        "y": 0,
+        "z": 0
+      },
+      "left": [
+        1,
+        0.5
+      ],
+      "right": [
+        0.5,
+        1
+      ]
+    }
+  ],
+  "sample_rate": 48000,
+  "hrir_rate": 48000,
+  "fade_samples": 1,
+  "sources": [
+    {
+      "samples": [
+        1
+      ],
+      "keyframes": [
+        {
+          "at": 0,
+          "direction": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "start": 0,
+      "gain": 1
+    },
+    {
+      "samples": [
+        2
+      ],
+      "keyframes": [
+        {
+          "at": 0,
+          "direction": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          }
+        }
+      ],
+      "start": 1,
+      "gain": 0.5
+    }
+  ]
+}
