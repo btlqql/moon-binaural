@@ -1,0 +1,72 @@
+[
+  {
+    "file": "narrator.wav",
+    "source_url": "https://keithito.com/LJ-Speech-Dataset/LJ037-0171.wav",
+    "source_sha256": "d4c1fdbe920c2efeb525dcc067ed01c7feaa07ded719a98bd7e62a8f277cd0cd",
+    "original_rate": 22050,
+    "original_channels": 1,
+    "trim_start_samples": 0,
+    "converted_frames": 364029,
+    "sha256": "dfa391011f4b9bdd0170e5bc0c74ddba4165463134c3e25b6d1fe30d5e48a2fc"
+  },
+  {
+    "file": "steps.wav",
+    "source_url": "https://cdn.freesound.org/previews/740/740292_14631530-hq.mp3",
+    "source_sha256": "d3b215b93500ed223e56f529432684b398aac87b790995c6322f8446cf532713",
+    "original_rate": 48000,
+    "original_channels": 2,
+    "trim_start_samples": 0,
+    "converted_frames": 169088,
+    "sha256": "5bf86541ae7937c49aa8b7e061c5cb5cff2225ebefc23a1368ad61398ddd193e"
+  },
+  {
+    "file": "door.wav",
+    "source_url": "https://cdn.freesound.org/previews/745/745550_11610655-hq.mp3",
+    "source_sha256": "2c637de58dc01d0cc37a079dc4f467917fca89c83edfc8e9c531303169700831",
+    "original_rate": 44100,
+    "original_channels": 1,
+    "trim_start_samples": 919666,
+    "converted_frames": 48000,
+    "sha256": "ee8750cc3725bc3cf203e7d7669f7a92024873f5d8e4dd7e44abebec92008dba"
+  },
+  {
+    "source_url": "https://raw.githubusercontent.com/google/spatial-media/2308497c39bb604a7c3ba56ac17e302f2b1b6a96/spatial-audio/raw-symmetric-cube-hrirs/E35_A45.wav",
+    "name": "E35_A45.wav",
+    "direction": {
+      "x": -1,
+      "y": 1,
+      "z": 1
+    },
+    "source_sha256": "dc45ae3cd3632afd46fcb0827cd812011259f879d70c9eae4ed7b0ddc6a61fa2"
+  },
+  {
+    "source_url": "https://raw.githubusercontent.com/google/spatial-media/2308497c39bb604a7c3ba56ac17e302f2b1b6a96/spatial-audio/raw-symmetric-cube-hrirs/E35_A-45.wav",
+    "name": "E35_A-45.wav",
+    "direction": {
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "source_sha256": "0b99330a0818a654e3c5dd28bd1bf83670b9b3119407451304ff26c6d3fbefde"
+  },
+  {
+    "source_url": "https://raw.githubusercontent.com/google/spatial-media/2308497c39bb604a7c3ba56ac17e302f2b1b6a96/spatial-audio/raw-symmetric-cube-hrirs/E35_A135.wav",
+    "name": "E35_A135.wav",
+    "direction": {
+      "x": -1,
+      "y": -1,
+      "z": 1
+    },
+    "source_sha256": "f77103e6a8d15915f16cd85a393b28e8248d5a06dcd4550b462875cd48816b8c"
+  },
+  {
+    "source_url": "https://raw.githubusercontent.com/google/spatial-media/2308497c39bb604a7c3ba56ac17e302f2b1b6a96/spatial-audio/raw-symmetric-cube-hrirs/E35_A-135.wav",
+    "name": "E35_A-135.wav",
+    "direction": {
+      "x": 1,
+      "y": -1,
+      "z": 1
+    },
+    "source_sha256": "4d5ad422968385cd97bca34820ae44f1fc0ac7aacd20e9cc9523c1d66a0ae222"
+  }
+]

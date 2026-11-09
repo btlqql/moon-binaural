@@ -1,6 +1,6 @@
 """Standalone independent oracles; only Python stdlib, MoonBit and Node required."""
 from pathlib import Path
-import itertools,json,math,os,random,subprocess,wave
+import array,hashlib,itertools,json,math,os,random,subprocess,sys,tempfile,time,wave
 ROOT=Path(__file__).resolve().parents[1]
 WORK=ROOT/'_build/oracle';WORK.mkdir(parents=True,exist_ok=True)
 R=random.Random(20261031)
@@ -56,7 +56,67 @@ file_req=dict(base,sources=sources,output=str(out))
 request(file_req);old=out.read_bytes();request(file_req,False);assert old==out.read_bytes()
 with wave.open(str(out),'rb') as w:assert w.getnchannels()==2 and w.getframerate()==48000
 request(dict(base,input=x,keyframes=frames,hrir_rate=44100),False)
-report={'status':'passed','seed':20261031,'moving_measured_hrir_max_abs_error':error,'independent_multisource_superposition':True,'exclusive_output':True}
+def project(scene, output, expect=True):
+    command = ['node',str(ROOT/'_build/js/debug/build/cmd/main/main.js'),'project',str(scene),str(output)]
+    run = subprocess.run(command,cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=60)
+    assert (run.returncode == 0) == expect, (run.stdout,run.stderr)
+    result = json.loads(run.stdout)
+    assert result['ok'] == expect
+    return result
+
+def wav_metrics(path, frames):
+    with wave.open(str(path),'rb') as audio:
+        assert (audio.getnchannels(),audio.getsampwidth(),audio.getframerate(),audio.getnframes())==(2,2,48000,frames)
+        pcm = array.array('h', audio.readframes(frames))
+    if sys.byteorder != 'little':
+        pcm.byteswap()
+    return max(abs(x) for x in pcm)/32767, math.sqrt(sum(x*x for x in pcm)/len(pcm))/32767
+
+drama=ROOT/'examples/drama'
+with tempfile.TemporaryDirectory(dir=WORK) as directory:
+    folder=Path(directory)
+    start=time.monotonic()
+    result=project(drama/'scene.json',folder/'first')
+    seconds=time.monotonic()-start
+    assert result['frames']==744255 and result['sample_rate']==48000
+    assert len(result['tracks'])==4 and result['tracks'][0]['source_frames']>240000
+    observed={}
+    for name in ('pan','binaural'):
+        path=folder/'first'/(name+'.wav')
+        peak,rms=wav_metrics(path,result['frames'])
+        assert peak<=.981 and abs(peak-result[name]['output_peak'])<1/32767
+        assert abs(rms-result['rms_target'])<1/32767
+        observed[name]={'peak':peak,'rms':rms,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+    assert observed['pan']['sha256']!=observed['binaural']['sha256']
+    project(drama/'scene.json',folder/'first',False)
+    assert hashlib.sha256((folder/'first/binaural.wav').read_bytes()).hexdigest()==observed['binaural']['sha256']
+    revision=project(drama/'scene-revised.json',folder/'revised')
+    assert revision['frames']==result['frames']
+    assert (folder/'first/binaural.wav').read_bytes()!=(folder/'revised/binaural.wav').read_bytes()
+    fixed=json.loads((drama/'scene.json').read_text(encoding='utf-8'))
+    fixed['hrir_file']=str(drama/'hrir.json')
+    for track in fixed['tracks']:
+        track['wav']=str(drama/track['wav'])
+    fixed['tracks'][1]['keyframes'][1]['y']=-1
+    fixed_path=folder/'fixed.json'
+    fixed_path.write_text(json.dumps(fixed),encoding='utf-8')
+    without_depth_motion=project(fixed_path,folder/'fixed')
+    assert result['pan']['input_rms']==without_depth_motion['pan']['input_rms']
+    assert abs(result['binaural']['input_rms']-without_depth_motion['binaural']['input_rms'])>1e-8
+    bad=json.loads((drama/'scene.json').read_text(encoding='utf-8'))
+    bad['hrir_file']=str(drama/'hrir.json')
+    bad['tracks'][0]['wav']=str(folder/'truncated.wav')
+    (folder/'truncated.wav').write_bytes((drama/'narrator.wav').read_bytes()[:45])
+    invalid=folder/'invalid.json'
+    invalid.write_text(json.dumps(bad),encoding='utf-8')
+    project(invalid,folder/'bad',False)
+    assert not (folder/'bad').exists()
+report={'status':'passed','seed':20261031,'moving_measured_hrir_max_abs_error':error,
+        'independent_multisource_superposition':True,'exclusive_output':True,
+        'recorded_audio_frames':result['frames'],'sample_rate':48000,'tracks':4,
+        'render_seconds':round(seconds,3),'pcm_observed':observed,
+        'timeline_edit_changes_audio':True,'same_side_depth_motion_changes_binaural':True,
+        'truncated_wav_rejected':True}
 
 (WORK/'result.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
 print(json.dumps(report,indent=2))
