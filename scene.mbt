@@ -37,7 +37,7 @@ pub fn render_scene(
     sample_rate > 192000 ||
     sample_rate != hrir_rate ||
     input.is_empty() ||
-    input.length() > 240000 ||
+    input.length() > offline_frame_limit ||
     keyframes.is_empty() ||
     keyframes.length() > 512 ||
     keyframes[0].at != 0 ||
@@ -48,7 +48,8 @@ pub fn render_scene(
     raise InvalidAudio
   }
   let taps = measurements[0].hrir.left.length()
-  if input.length().to_int64() * taps.to_int64() > 64000000L {
+  if (input.length() + taps - 1).to_int64() * taps.to_int64() >
+    offline_work_limit {
     raise InvalidAudio
   }
   for m in measurements {

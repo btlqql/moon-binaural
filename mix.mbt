@@ -6,6 +6,12 @@ pub(all) struct Source {
   gain : Double
 }
 
+///|
+let offline_frame_limit : Int32 = 1440000
+
+///|
+let offline_work_limit : Int64 = 384000000L
+
 // Bounded offline mixing. Each source has an independent convolution history.
 // Summation is unclipped; clipping is measured before optional PCM quantization.
 
@@ -24,11 +30,14 @@ pub fn render_mix(
   let mut work = 0L
   let mut length = 0
   for s in sources {
-    if s.start < 0 || s.start > 240000 || !finite(s.gain) || s.gain.abs() > 16.0 {
+    if s.start < 0 ||
+      s.start >= offline_frame_limit ||
+      !finite(s.gain) ||
+      s.gain.abs() > 16.0 {
       raise InvalidAudio
     }
     work += s.samples.length().to_int64() * taps.to_int64()
-    if work > 64000000L || s.samples.length() > 240000 {
+    if work > offline_work_limit || s.samples.length() > offline_frame_limit {
       raise InvalidAudio
     }
     let end = s.start + s.samples.length() + taps - 1
@@ -36,7 +45,7 @@ pub fn render_mix(
       length = end
     }
   }
-  if length > 480000 {
+  if length > offline_frame_limit {
     raise InvalidAudio
   }
   let result : Stereo = {

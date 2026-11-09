@@ -32,6 +32,15 @@ fn num(j : Json) -> Double raise {
 fn main {
   try {
     let args = @env.args()
+    if args.length() >= 3 && args[2] == "project" {
+      if args.length() != 5 {
+        fail(
+          "usage: moon run cmd/main --target js -- project scene.json new-output-directory",
+        )
+      }
+      println(run_project(args[3], args[4]).stringify())
+      return
+    }
     if args.length() < 3 {
       fail("usage: moon run cmd/main --target js -- request.json")
     }
@@ -97,9 +106,9 @@ extern "js" fn write_wav(
   #| (p,r,l,h) => {try {const f=process.getBuiltinModule('fs');const b=Buffer.alloc(44+l.length*4);b.write('RIFF');b.writeUInt32LE(b.length-8,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(2,22);b.writeUInt32LE(r,24);b.writeUInt32LE(r*4,28);b.writeUInt16LE(4,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(l.length*4,40);for(let i=0;i<l.length;i++){b.writeInt16LE(Math.max(-32768,Math.min(32767,Math.round(l[i]*32767))),44+i*4);b.writeInt16LE(Math.max(-32768,Math.min(32767,Math.round(h[i]*32767))),46+i*4);}f.writeFileSync(p,b,{flag:'wx'});return true;}catch{return false;}}
 
 ///|
-fn scene(j : Json) -> Json raise {
+fn parse_measurements(rows : Json) -> Array[@core.Measurement] raise {
   let measurements : Array[@core.Measurement] = []
-  for m in arr(field(j, "measurements")) {
+  for m in arr(rows) {
     measurements.push({
       direction: direction(field(m, "direction")),
       hrir: @core.Hrir::new(
@@ -108,6 +117,12 @@ fn scene(j : Json) -> Json raise {
       ),
     })
   }
+  measurements
+}
+
+///|
+fn scene(j : Json) -> Json raise {
+  let measurements = parse_measurements(field(j, "measurements"))
   let rate = integer(field(j, "sample_rate"))
   let result = if j is Object(fields) && fields.get("sources") is Some(rows) {
     let sources : Array[@core.Source] = []

@@ -1,1 +1,4 @@
 // Portable domain core.
+import {
+  "moonbitlang/core/cmp",
+}

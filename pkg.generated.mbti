@@ -2,6 +2,10 @@
 package "btlqql/moon_binaural"
 
 // Values
+pub fn decode_mono_wav(Bytes) -> MonoPcm raise AudioError
+
+pub fn render_comparison(Array[Source], Array[Measurement], Int, Int, Int) -> PreviewPair raise AudioError
+
 pub fn render_mix(Array[Source], Array[Measurement], Int, Int, Int) -> SceneResult raise AudioError
 
 pub fn render_scene(Array[Double], Array[Measurement], Array[Keyframe], Int, Int, Int) -> SceneResult raise AudioError
@@ -16,6 +20,11 @@ pub(all) suberror AudioError {
 }
 
 // Types and methods
+pub(all) struct ClipSpan {
+  start_frame : Int
+  end_frame : Int
+}
+
 pub(all) struct Direction {
   x : Double
   y : Double
@@ -36,6 +45,29 @@ pub(all) struct Keyframe {
 pub(all) struct Measurement {
   direction : Direction
   hrir : Hrir
+}
+
+pub(all) struct MixMetrics {
+  peak : Double
+  rms : Double
+  clipped_samples : Int
+  clip_spans : Array[ClipSpan]
+  omitted_spans : Int
+}
+
+pub(all) struct MonoPcm {
+  sample_rate : Int
+  samples : Array[Double]
+}
+
+pub(all) struct PreviewPair {
+  binaural : Stereo
+  pan : Stereo
+  binaural_input : MixMetrics
+  pan_input : MixMetrics
+  binaural_gain : Double
+  pan_gain : Double
+  matched_rms : Double?
 }
 
 pub struct Renderer {
