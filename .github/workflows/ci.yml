@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: '3.12'
       - uses: hustcer/setup-moonbit@87e2bdf5cf20d3b6f5c5f266a8a513f503bb5b76
+        with:
+          version: '0.10.15+943464bfa'
+          core-version: '0.10.15+943464bfa'
       - run: moon version --all
       - run: moon check --target ${{ matrix.target }} --deny-warn
       - run: moon build --target ${{ matrix.target }} --deny-warn

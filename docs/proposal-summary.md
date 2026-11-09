@@ -1,27 +1,15 @@
-# MoonBinaural项目申报书
+# MoonBinaural 一页项目说明
 
-**实测HRIR驱动的离线方向轨迹与多声源双耳渲染**
+**用 MoonBit 制作和返修有声剧耳机混音 · 0.4.0**
 
-账号：btlqql；版本：0.3.0；主要语言：MoonBit；许可：Apache-2.0。
+独立有声剧制作人导入对白、脚步、门声的单声道 WAV，用场景文件记录入点、移动方向和增益。工具一次导出双耳混音、等电平普通声像对照和超幅时间报告，创作者可以针对某段效果修改方向再渲染。
 
-## 解决的问题与使用场景
+《走廊》示例由三段可公开分发的录音组成，含四个轨道实例。生成 744,255 帧、48 kHz 的两个立体声文件，约 15.5 秒。将脚步的第二个方向关键帧从左前改成右前即可得到返修版本。独立检查核对 WAV 元数据、输出电平、修改前后文件差异，以及截断输入和输出覆盖的拒绝路径。
 
-从单声道采样、实测耳部响应与方向关键帧，渲染左右耳音频；多个声源使用独立历史、不同起始时刻和增益，再混合导出。
+WAV 解码、实测 HRIR 卷积、方向切换、声像与超幅检查由 MoonBit 实现。当前面向同采样率 PCM16 素材和固定头向的离线制作，数值验证与耳机试听分别提供，真人定位效果仍待听测。
 
-## 已实现功能与技术路线
+```sh
+moon run cmd/main --target js -- project examples/drama/scene.json _build/drama-preview
+```
 
-双耳流式FIR、球面最近测量点、共享历史交叉淡化、关键帧场景、分块尾部排空、多源独立卷积和带增益/起点混合、峰值与超幅统计、排他WAV导出。
-
-## 完整案例
-
-双源例左耳输出[1,1.5,0.5]，峰值1.5，左右合计2个超幅采样；合成短音配两份固定实测HRIR的方向轨迹输出12255帧、48kHz立体声。 运行`moon run cmd/main --target js -- examples/two-sources.json`可复现。
-
-## 独立贡献与验证
-
-由房间IR计算混响/噪声底/模态；本项目将源音频渲染为两耳信号。MoonSpectrum的FFT、MoonWavKit的文件解析不作为本项目新增贡献。 当前8项MoonBit测试；两份固定SADIE衍生KU100 HRIR，动态逐采样双卷积/淡化对照误差约1.11e-15；独立多源线性叠加、WAV元数据与排他输出验证。 相邻项目对照见docs/ECOSYSTEM.md，来源与许可见THIRD_PARTY.md。
-
-## 当前边界
-
-离线直接FIR，复杂度O(N*M)，切换期间双卷积。没有分区FFT、任意音频文件/ SOFA导入、重采样或实时线程保证。测量方向取最近点，输出淡化不是ITD保持的HRTF插值。当前源信号合成，HRIR来自外部实测，没有真人听测。
-
-GitHub：https://github.com/btlqql/moon-binaural。模块：btlqql/moon_binaural@0.3.0。AI辅助开发；公开提交、CI和独立安装以实际核验记录为准，开源发布不代表比赛报名或验收通过。
+[GitHub](https://github.com/btlqql/moon-binaural) · [MoonCakes 0.4.0](https://mooncakes.io/docs/btlqql/moon_binaural@0.4.0) · [工程与试听附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.0) · [完整申报书](proposal.md)

@@ -1,9 +1,9 @@
-# 与已有项目的职责对照
+# 与相邻项目的职责对照
 
-核查日期2026-10-31。检索公开仓库、模块和最接近项目的一手README；未命中不构成生态唯一保证。
+| 项目 | 主要职责 | MoonBinaural 本轮交付 |
+|---|---|---|
+| Steam Audio | 游戏及 VR 的空间音频 SDK，含 HRTF 双耳渲染 | 用可保存的场景文件批量导入录音，产出双耳/声像对照、可定位的超幅区间和修改后的成品 |
+| roomacoustics | 基于房间脉冲响应的声学指标分析 | 根据源方向及其变化渲染两耳时间信号 |
+| MoonWavKit 等 WAV 工具 | 容器与音频文件处理 | PCM16 读取接到多轨时间轴、HRIR 渲染和制作流程，格式读取作为支撑能力 |
 
-- [AYHEY001/roomacoustics](https://github.com/AYHEY001/roomacoustics)：由房间IR计算混响/噪声底/模态；本项目将源音频渲染为两耳信号。MoonSpectrum的FFT、MoonWavKit的文件解析不作为本项目新增贡献。
-
-离线直接FIR，复杂度O(N*M)，切换期间双卷积。没有分区FFT、任意音频文件/ SOFA导入、重采样或实时线程保证。测量方向取最近点，输出淡化不是ITD保持的HRTF插值。当前源信号合成，HRIR来自外部实测，没有真人听测。
-
-本项目是AI辅助的独立MoonBit实现，算法来自成熟公开方法，不将CLI、基础I/O或第三方数据计为独立算法贡献。
+比较基于公开资料中的用途与接口。HRTF 卷积与声像采用已有方法，本轮新增价值是 MoonBit 内核与离线创作工作流的结合。 [Steam Audio](https://valvesoftware.github.io/steam-audio/doc/capi/binaural-effect.html) · [roomacoustics](https://github.com/AYHEY001/roomacoustics)
