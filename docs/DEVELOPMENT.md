@@ -16,3 +16,5 @@ b136bda | 2026-10-31T19:55:29+08:00 | Document complete runnable workflows, ecos
 ```
 
 用户本轮明确确认：比赛要求为每个参赛仓库至少10次提交，没有另列起始或截止时间。本项目按仓库真实历史计数，不再将旧通知的9月1日或假设的11月1日另作本轮门槛。
+
+0.4.1 基于原仓库的 0.4.0 版本，新增配平前超幅定位和峰值分轨解释。实现复用现有卷积结果的渲染规则，逐轨重渲染有待查峰值的声源，并一次只保留一个分轨，控制临时内存。故障样例复用同一套录音，验证单轨增益修正前后的指标及旧输出兼容性。 [0.4.0 基线](https://github.com/btlqql/moon-binaural/tree/v0.4.0) · [开发提交](https://github.com/btlqql/moon-binaural/commits/main/) · [验证记录](VALIDATION.md)

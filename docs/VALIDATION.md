@@ -1,4 +1,16 @@
-# 0.4.0 验证记录
+# 0.4.1 验证记录
+
+## 定位超幅并复验单轨修正
+
+`scene-overload.json` 与 `scene.json` 使用相同的录音、方向与时间轴，仅第一条脚步轨的增益不同。
+
+| 配平前双耳指标 | 故障场景（增益 10.0） | 修正场景（增益 1.6） |
+|---|---:|---:|
+| 峰值绝对幅度 | 1.157201 | 0.727947 |
+| 超幅耳样本数 | 8 | 0 |
+| 超幅提示区间 | 2 | 0 |
+
+约 7.325 秒处，左耳峰值为 −1.090019，脚步轨贡献约 −1.086934，旁白约 −0.003086。约 7.802 秒处，最强峰值全部来自该脚步轨。两个预览输出目录分别保留报告和经过配平的 WAV，作为复跑对照。报告中的超幅计数按耳样本，提示时间范围按帧。 [返修前后报告及试听附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.1)
 
 ## 录音工作流
 
@@ -11,6 +23,6 @@
 
 `scripts/verify.py` 检查修改一个关键帧后的文件差异、同侧前后变化对两种渲染的影响、截断 WAV 拒绝和排他写入。测试将结果保存在 `_build/oracle/result.json`，包含导出哈希和当次运行耗时。局部测得脚本中的主场景渲染约 0.9 秒，性能依赖主机和素材。
 
-旧流程的逐采样双卷积/淡化独立对照最大误差约 1.11e-15，多源线性叠加对照通过。10 项 MoonBit 测试覆盖原功能、带奇数长度填充块的 PCM16 WAV、两耳样本与超幅区间和电平配平。Windows 本地执行 JS、Wasm、Wasm-GC 测试，GitHub Actions 提供四后端执行记录。 [公共 CI](https://github.com/btlqql/moon-binaural/actions)
+旧流程的逐采样双卷积/淡化独立对照最大误差约 1.11e-15，多源线性叠加对照通过。MoonBit 测试覆盖 PCM16 WAV、两耳样本与超幅区间、电平配平及分轨贡献。GitHub Actions 提供四后端库测试和 JS 文件工作流验证。 [公共 CI](https://github.com/btlqql/moon-binaural/actions)
 
-试听可使用发布附件的两版 WAV，报告和素材可从仓库复现。电平为全片 RMS，定位效果仍待听测。 [试听附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.0)
+试听可使用发布附件的 WAV，报告和素材可从仓库复现。电平为全片 RMS，定位效果仍待听测。 [试听附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.1)

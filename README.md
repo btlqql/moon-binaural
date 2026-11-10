@@ -1,19 +1,19 @@
-# MoonBinaural 0.4.0
+# MoonBinaural 0.4.1
 
-面向独立有声剧和叙事音频的离线耳机混音工具。导入单声道 WAV，用时间和方向标记安排对白、脚步、门声，导出双耳混音、普通声像对照和可定位到时间的超幅报告。场景文件可随素材一起保存和修改。
+面向独立有声剧和叙事音频的离线耳机混音工具。导入单声道 WAV，用时间和方向标记安排对白、脚步、门声。报告给出配平前的超幅时间、声道和各轨道对峰值的贡献，制作人可据此调整指定轨道并复跑检查。每次渲染同时导出双耳和普通声像预览。
 
-## 跑一遍《走廊》样片
+## 定位并修复《走廊》样片的脚步超幅
 
-安装 MoonBit 和 Node.js 22 或以上，从仓库根目录运行。第二条命令将一个脚步方向改到右前方，便于核对返修结果。
+安装 MoonBit 和 Node.js 22 或以上，从仓库根目录运行。故障样例将第一条脚步轨增益设为 10.0。修正版保留同一素材、时间轴和方向，只把该轨增益设为 1.6。
 
 ```sh
-moon run cmd/main --target js -- project examples/drama/scene.json _build/drama-preview
-moon run cmd/main --target js -- project examples/drama/scene-revised.json _build/drama-revision
+moon run cmd/main --target js -- project examples/drama/scene-overload.json _build/drama-overload
+moon run cmd/main --target js -- project examples/drama/scene.json _build/drama-repair
 ```
 
-每次指定新的输出目录，父目录须存在。产物是 `binaural.wav`、`pan.wav`、`report.json`。相同素材、轨道入点和增益用于两版。全片 RMS 配平通过衰减实现，并保留 0.98 峰值余量。报告保留衰减前的超幅区间，方便回到场景调整增益。
+每次指定新的输出目录，父目录须存在。产物是 `binaural.wav`、`pan.wav`、`report.json`。报告的 `overload_review.cues` 给出配平前双耳混音的超幅时间、峰值耳道和该采样点的带符号分轨贡献。样例最强超幅位于左耳约 7.802 秒，报告指向 `approaching-steps`。重渲染后，配平前超幅耳样本从 8 个降到 0，峰值从 1.1572 降到 0.7279。导出的试听文件均使用原有 RMS 配平和 0.98 峰值上限。
 
-样片长约 15.5 秒，包含三段公开录音及四个轨道实例。第一组脚步从左后转向左前，普通声像只使用左右坐标，双耳版本会选择不同实测耳部滤波器。第二组脚步从左向右移动。可直接下载试听文件和工程。 [样片与素材说明](examples/drama/README.md) · [0.4.0 发布附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.0)
+样片长约 15.5 秒，包含三段公开录音及四个轨道实例。带符号贡献只解释该峰值采样点，混音修改的效果以重渲染复查为准。报告最多展示 32 个提示区间，并报告省略数量。 [样片与素材说明](examples/drama/README.md) · [0.4.1 试听和报告附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.1)
 
 ## 自己制作一个场景
 
@@ -24,11 +24,11 @@ moon run cmd/main --target js -- project examples/drama/scene-revised.json _buil
 ## 库接口与验证
 
 ```sh
-moon add btlqql/moon_binaural@0.4.0
+moon add btlqql/moon_binaural@0.4.1
 moon test --target js --deny-warn
 python scripts/verify.py
 ```
 
-新增 `decode_mono_wav`、`render_comparison`。原有 `Renderer`、`render_scene`、`render_mix` 和采样数组 JSON CLI 仍可使用。WAV 解析、卷积、声像和质量统计均由 MoonBit 实现，Node 负责文件读写和 PCM 封装。
+本轮新增 `render_reviewed_comparison`，在 `render_comparison` 的混音基础上提供超幅定位。旧接口及采样数组 JSON CLI 保持兼容。WAV 解析、卷积、声像和质量统计均由 MoonBit 实现，Node 负责文件读写和 PCM 封装。
 
 [验证记录](docs/VALIDATION.md) · [生态对照](docs/ECOSYSTEM.md) · [来源与许可](THIRD_PARTY.md) · [完整申报书](docs/proposal.md) · [一页项目说明](docs/proposal-summary.md)
