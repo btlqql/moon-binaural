@@ -1,0 +1,41 @@
+{
+  "format": "moon-binaural-scene-v1",
+  "hrir_file": "hrir.json",
+  "fade_ms": 25,
+  "tracks": [
+    {
+      "name": "narrator",
+      "wav": "narrator.wav",
+      "start_ms": 0,
+      "gain": 0.95,
+      "keyframes": [{ "at_ms": 0, "x": 1, "y": 1, "z": 1 }]
+    },
+    {
+      "name": "approaching-steps",
+      "wav": "steps.wav",
+      "start_ms": 4400,
+      "gain": 10.0,
+      "keyframes": [
+        { "at_ms": 0, "x": -1, "y": -1, "z": 1 },
+        { "at_ms": 1630, "x": -1, "y": 1, "z": 1 }
+      ]
+    },
+    {
+      "name": "passing-steps",
+      "wav": "steps.wav",
+      "start_ms": 8600,
+      "gain": 1.6,
+      "keyframes": [
+        { "at_ms": 0, "x": -1, "y": 1, "z": 1 },
+        { "at_ms": 1580, "x": 1, "y": 1, "z": 1 }
+      ]
+    },
+    {
+      "name": "door",
+      "wav": "door.wav",
+      "start_ms": 14500,
+      "gain": 0.9,
+      "keyframes": [{ "at_ms": 0, "x": 1, "y": -1, "z": 1 }]
+    }
+  ]
+}

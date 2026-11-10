@@ -143,6 +143,15 @@ pub fn render_comparison(
   let binaural = render_mix(
       sources, measurements, sample_rate, hrir_rate, fade_samples,
     ).audio
+  compare_with_pan(binaural, sources, fade_samples)
+}
+
+///|
+fn compare_with_pan(
+  binaural : Stereo,
+  sources : Array[Source],
+  fade_samples : Int32,
+) -> PreviewPair raise AudioError {
   let pan = pan_preview(sources, binaural.left.length(), fade_samples)
   let binaural_input = metrics(binaural)
   let pan_input = metrics(pan)

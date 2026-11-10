@@ -92,6 +92,49 @@ fn mix_report(metrics : @core.MixMetrics, gain : Double, rate : Int32) -> Json {
 }
 
 ///|
+fn overload_report(
+  review : @core.ReviewedPreview,
+  names : Array[String],
+  rate : Int32,
+) -> Json {
+  let ms_per_frame = 1000.0 / rate.to_double()
+  Json::object({
+    "stage": Json("binaural_before_attenuation"),
+    "merge_gap_frames": Json(review.merge_gap_frames),
+    "omitted_cues": Json(review.omitted_cues),
+    "cues": Json(
+      review.overload_cues.map(fn(cue) {
+        Json::object({
+          "start_frame": Json(cue.start_frame),
+          "end_frame_exclusive": Json(cue.end_frame),
+          "start_ms": Json(cue.start_frame.to_double() * ms_per_frame),
+          "end_ms_exclusive": Json(cue.end_frame.to_double() * ms_per_frame),
+          "clipped_samples": Json(cue.clipped_samples),
+          "peak_frame": Json(cue.peak_frame),
+          "peak_ms": Json(cue.peak_frame.to_double() * ms_per_frame),
+          "peak_channel": Json(
+            match cue.peak_channel {
+              Left => "left"
+              Right => "right"
+            },
+          ),
+          "peak_sample": Json(cue.peak_sample),
+          "contributions": Json(
+            cue.contributions.map(fn(track) {
+              Json::object({
+                "track": Json(names[track.source_index]),
+                "signed_sample": Json(track.sample),
+                "adds_to_peak": Json(track.sample * cue.peak_sample > 0.0),
+              })
+            }),
+          ),
+        })
+      }),
+    ),
+  })
+}
+
+///|
 fn run_project(manifest_path : String, output : String) -> Json raise {
   let j = @json.parse(read_input(manifest_path))
   guard field(j, "format") is String("moon-binaural-scene-v1") else {
@@ -113,6 +156,7 @@ fn run_project(manifest_path : String, output : String) -> Json raise {
   }
   let sources : Array[@core.Source] = []
   let tracks : Array[Json] = []
+  let track_names : Array[String] = []
   let names : Map[String, Bool] = Map([])
   let mut total_frames = 0L
   for row in rows {
@@ -123,6 +167,7 @@ fn run_project(manifest_path : String, output : String) -> Json raise {
       fail("empty or duplicate track name")
     }
     names[name] = true
+    track_names.push(name)
     guard field(row, "wav") is String(path) else { fail("wav must be a path") }
     let decoded = @core.decode_mono_wav(
       read_pcm(resolve_from(manifest_path, path)),
@@ -167,7 +212,10 @@ fn run_project(manifest_path : String, output : String) -> Json raise {
       }),
     )
   }
-  let pair = @core.render_comparison(sources, measurements, rate, rate, fade)
+  let review = @core.render_reviewed_comparison(
+    sources, measurements, rate, rate, fade,
+  )
+  let pair = review.preview
   let report = Json::object({
     "ok": Json(true),
     "sample_rate": Json(rate),
@@ -180,6 +228,7 @@ fn run_project(manifest_path : String, output : String) -> Json raise {
     },
     "binaural": mix_report(pair.binaural_input, pair.binaural_gain, rate),
     "pan": mix_report(pair.pan_input, pair.pan_gain, rate),
+    "overload_review": overload_report(review, track_names, rate),
   })
   if !create_output(output) {
     fail("output directory already exists or cannot be created")

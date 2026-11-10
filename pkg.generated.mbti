@@ -8,6 +8,8 @@ pub fn render_comparison(Array[Source], Array[Measurement], Int, Int, Int) -> Pr
 
 pub fn render_mix(Array[Source], Array[Measurement], Int, Int, Int) -> SceneResult raise AudioError
 
+pub fn render_reviewed_comparison(Array[Source], Array[Measurement], Int, Int, Int) -> ReviewedPreview raise AudioError
+
 pub fn render_scene(Array[Double], Array[Measurement], Array[Keyframe], Int, Int, Int) -> SceneResult raise AudioError
 
 pub fn select(Array[Measurement], Direction) -> Hrir raise AudioError
@@ -60,6 +62,21 @@ pub(all) struct MonoPcm {
   samples : Array[Double]
 }
 
+pub struct OverloadCue {
+  start_frame : Int
+  mut end_frame : Int
+  mut clipped_samples : Int
+  mut peak_frame : Int
+  mut peak_channel : PeakChannel
+  mut peak_sample : Double
+  contributions : Array[TrackContribution]
+}
+
+pub(all) enum PeakChannel {
+  Left
+  Right
+}
+
 pub(all) struct PreviewPair {
   binaural : Stereo
   pan : Stereo
@@ -83,6 +100,13 @@ pub fn Renderer::new(Hrir) -> Self
 pub fn Renderer::process(Self, Array[Double]) -> Stereo raise AudioError
 pub fn Renderer::transition(Self, Hrir, Int) -> Unit raise AudioError
 
+pub(all) struct ReviewedPreview {
+  preview : PreviewPair
+  overload_cues : Array[OverloadCue]
+  omitted_cues : Int
+  merge_gap_frames : Int
+}
+
 pub(all) struct SceneResult {
   audio : Stereo
   peak : Double
@@ -99,6 +123,11 @@ pub(all) struct Source {
 pub(all) struct Stereo {
   left : Array[Double]
   right : Array[Double]
+}
+
+pub(all) struct TrackContribution {
+  source_index : Int
+  sample : Double
 }
 
 // Type aliases

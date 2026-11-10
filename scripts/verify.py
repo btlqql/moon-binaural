@@ -88,6 +88,47 @@ with tempfile.TemporaryDirectory(dir=WORK) as directory:
         assert abs(rms-result['rms_target'])<1/32767
         observed[name]={'peak':peak,'rms':rms,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
     assert observed['pan']['sha256']!=observed['binaural']['sha256']
+    assert result['overload_review']['cues'] == []
+    bad_scene = json.loads((drama/'scene-overload.json').read_text(encoding='utf-8'))
+    repair_scene = json.loads((drama/'scene.json').read_text(encoding='utf-8'))
+    changed = [track for track in bad_scene['tracks'] if track['name'] == 'approaching-steps']
+    assert len(changed) == 1 and changed[0]['gain'] == 10.0
+    changed[0]['gain'] = 1.6
+    assert bad_scene == repair_scene
+    overload = project(drama/'scene-overload.json',folder/'overload')
+    assert overload['frames'] == result['frames']
+    assert overload['binaural']['input_clipped_samples'] == 8
+    assert result['binaural']['input_clipped_samples'] == 0
+    assert overload['pan']['input_clipped_samples'] == 17
+    assert result['pan']['input_clipped_samples'] == 0
+    trace = overload['overload_review']
+    assert trace['stage'] == 'binaural_before_attenuation'
+    assert trace['merge_gap_frames'] == 960 and trace['omitted_cues'] == 0
+    assert len(trace['cues']) == 2
+    assert sum(cue['clipped_samples'] for cue in trace['cues']) == 8
+    first = trace['cues'][0]
+    assert (first['start_frame'], first['peak_frame'], first['end_frame_exclusive']) == (351601,351602,351628)
+    assert first['peak_channel'] == 'left'
+    assert [term['track'] for term in first['contributions']] == ['approaching-steps','narrator']
+    for cue in trace['cues']:
+        assert abs(sum(term['signed_sample'] for term in cue['contributions'])-cue['peak_sample']) < 1e-12
+        assert cue['contributions'][0]['adds_to_peak']
+        with wave.open(str(folder/'overload/binaural.wav'),'rb') as output:
+            output.setpos(cue['peak_frame'])
+            frame = output.readframes(1)
+            ear = 0 if cue['peak_channel'] == 'left' else 2
+            pcm_sample = int.from_bytes(frame[ear:ear+2],'little',signed=True)/32767
+        assert abs(pcm_sample-cue['peak_sample']*overload['binaural']['gain_applied']) < 1/32767
+    assert wav_metrics(folder/'overload/binaural.wav',overload['frames'])[0] <= .981
+    overload_repair = {
+        'track':'approaching-steps','original_gain':10.0,'repaired_gain':1.6,
+        'raw_binaural_clipped_samples_before':overload['binaural']['input_clipped_samples'],
+        'raw_binaural_clipped_samples_after':result['binaural']['input_clipped_samples'],
+        'raw_binaural_peak_before':overload['binaural']['input_peak'],
+        'raw_binaural_peak_after':result['binaural']['input_peak'],
+        'overload_cues_before':len(trace['cues']),'overload_cues_after':len(result['overload_review']['cues']),
+        'first_overload_cue':first,
+    }
     project(drama/'scene.json',folder/'first',False)
     assert hashlib.sha256((folder/'first/binaural.wav').read_bytes()).hexdigest()==observed['binaural']['sha256']
     revision=project(drama/'scene-revised.json',folder/'revised')
@@ -115,6 +156,7 @@ report={'status':'passed','seed':20261031,'moving_measured_hrir_max_abs_error':e
         'independent_multisource_superposition':True,'exclusive_output':True,
         'recorded_audio_frames':result['frames'],'sample_rate':48000,'tracks':4,
         'render_seconds':round(seconds,3),'pcm_observed':observed,
+        'recorded_audio_overload_repair':overload_repair,
         'timeline_edit_changes_audio':True,'same_side_depth_motion_changes_binaural':True,
         'truncated_wav_rejected':True}
 
