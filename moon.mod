@@ -1,10 +1,10 @@
 name = "btlqql/moon_binaural"
 
-version = "0.4.1"
+version = "0.5.0"
 
 license = "Apache-2.0"
 
-description = "Offline headphone mixes from recorded WAV tracks and editable spatial cues."
+description = "Block-based binaural spatial audio with measured HRIRs for MoonBit hosts."
 
 repository = "https://github.com/btlqql/moon-binaural"
 
