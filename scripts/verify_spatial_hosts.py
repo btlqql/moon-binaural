@@ -113,7 +113,7 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 
-def verify_browser(work, output, executable, browser, dataset, env):
+def verify_browser(work, output, executable, browser, profile_root, dataset, env):
     app = output / "browser-app"
     app.mkdir(exist_ok=True)
     for name in ("index.html", "host.mjs"):
@@ -124,8 +124,9 @@ def verify_browser(work, output, executable, browser, dataset, env):
         thread.start()
         try:
             url = f"http://127.0.0.1:{server.server_port}/index.html"
-            command = ["node", EXAMPLES / "browser/check.mjs", browser, work / "profile", url]
-            report = json.loads(run(command, work, env))
+            with tempfile.TemporaryDirectory(prefix="mb-", dir=profile_root) as scratch:
+                command = ["node", EXAMPLES / "browser/check.mjs", browser, Path(scratch) / "profile", url]
+                report = json.loads(run(command, work, env))
         finally:
             server.shutdown()
             thread.join()
@@ -162,6 +163,7 @@ def main():
     parser.add_argument("--browser", required=True, help="path to a Chromium, Chrome, or Edge executable")
     parser.add_argument("--version", default="0.5.0")
     parser.add_argument("--local", action="store_true", help="test the checkout before publishing")
+    parser.add_argument("--profile-root", type=Path, help="optional short directory for the browser temporary profile")
     parser.add_argument("--output", type=Path, default=ROOT / "_build/spatial-hosts")
     args = parser.parse_args()
     if not shutil.which("node"):
@@ -186,7 +188,9 @@ def main():
             "directions": len(dataset["measurements"]),
             "taps_per_ear": len(dataset["measurements"][0]["left"]),
             "offline": verify_offline(work, offline, dataset, env),
-            "worklet": verify_browser(work, output, browser, args.browser, dataset, env),
+            "worklet": verify_browser(
+                work, output, browser, args.browser, args.profile_root or output, dataset, env,
+            ),
             "dsp_benchmark": benchmark(work, offline, env),
         }
     text = json.dumps(report, indent=2)
