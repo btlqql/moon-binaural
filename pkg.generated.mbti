@@ -39,6 +39,11 @@ pub struct Hrir {
 }
 pub fn Hrir::new(Array[Double], Array[Double]) -> Self raise AudioError
 
+pub struct HrirBank {
+  // private fields
+}
+pub fn HrirBank::new(Array[Measurement], Int) -> Self raise AudioError
+
 pub(all) struct Keyframe {
   at : Int
   direction : Direction
@@ -119,6 +124,15 @@ pub(all) struct Source {
   start : Int
   gain : Double
 }
+
+pub struct SpatialRenderer {
+  // private fields
+}
+pub fn SpatialRenderer::finish_into(Self, Array[Double], Array[Double]) -> Int raise AudioError
+pub fn SpatialRenderer::new(HrirBank, Int, Direction, Double, Int) -> Self raise AudioError
+pub fn SpatialRenderer::process_into(Self, Array[Double], Array[Double], Array[Double]) -> Unit raise AudioError
+pub fn SpatialRenderer::reset(Self, Direction, Double) -> Unit raise AudioError
+pub fn SpatialRenderer::set_pose(Self, Direction, Double) -> Unit raise AudioError
 
 pub(all) struct Stereo {
   left : Array[Double]
