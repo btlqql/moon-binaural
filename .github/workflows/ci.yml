@@ -31,3 +31,12 @@ jobs:
       - name: Independent oracle and CLI file workflows
         if: matrix.target == 'js'
         run: python scripts/verify.py
+      - name: Verify independent browser and Node consumers
+        if: matrix.target == 'js'
+        run: python scripts/verify_spatial_hosts.py --local --browser "$(command -v google-chrome)"
+      - uses: actions/upload-artifact@v4
+        if: matrix.target == 'js'
+        with:
+          name: spatial-hosts
+          path: _build/spatial-hosts/spatial-hosts.json
+          if-no-files-found: error
