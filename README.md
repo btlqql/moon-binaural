@@ -1,34 +1,54 @@
-# MoonBinaural 0.4.1
+# MoonBinaural 0.5.0
 
-面向独立有声剧和叙事音频的离线耳机混音工具。导入单声道 WAV，用时间和方向标记安排对白、脚步、门声。报告给出配平前的超幅时间、声道和各轨道对峰值的贡献，制作人可据此调整指定轨道并复跑检查。每次渲染同时导出双耳和普通声像预览。
+MoonBit 的分块空间音频渲染库。宿主将单声道 PCM、声源相对位置和听者朝向送入同一接口，写出左右耳 PCM，适用于交互音频和离线资产处理。核心库使用实测头相关脉冲响应（HRIR），自身不执行文件读写或设备播放。
 
-## 定位并修复《走廊》样片的脚步超幅
+## 安装与调用
 
-安装 MoonBit 和 Node.js 22 或以上，从仓库根目录运行。故障样例将第一条脚步轨增益设为 10.0。修正版保留同一素材、时间轴和方向，只把该轨增益设为 1.6。
+在自己的 MoonBit 模块执行 `moon add btlqql/moon_binaural@0.5.0`。下面是 `moon.pkg` 的导入写法。
 
-```sh
-moon run cmd/main --target js -- project examples/drama/scene-overload.json _build/drama-overload
-moon run cmd/main --target js -- project examples/drama/scene.json _build/drama-repair
-```
+~~~moonbit
+import {
+  "btlqql/moon_binaural" @audio,
+}
+~~~
 
-每次指定新的输出目录，父目录须存在。产物是 `binaural.wav`、`pan.wav`、`report.json`。报告的 `overload_review.cues` 给出配平前双耳混音的超幅时间、峰值耳道和该采样点的带符号分轨贡献。样例最强超幅位于左耳约 7.802 秒，报告指向 `approaching-steps`。重渲染后，配平前超幅耳样本从 8 个降到 0，峰值从 1.1572 降到 0.7279。导出的试听文件均使用原有 RMS 配平和 0.98 峰值上限。
+构建测量库时提供同一采样率、同一抽头长度的左右耳响应。以下一抽头示例只展示调用方式，实测数据见仓库样例。
 
-样片长约 15.5 秒，包含三段公开录音及四个轨道实例。带符号贡献只解释该峰值采样点，混音修改的效果以重渲染复查为准。报告最多展示 32 个提示区间，并报告省略数量。 [样片与素材说明](examples/drama/README.md) · [0.4.1 试听和报告附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.1)
+~~~moonbit
+fn render_one_block() -> Unit raise @audio.AudioError {
+  let front : @audio.Direction = { x: 0.0, y: 1.0, z: 0.0 }
+  let bank = @audio.HrirBank::new(
+    [{ direction: front, hrir: @audio.Hrir::new([0.5], [0.25]) }],
+    48000,
+  )
+  let renderer = @audio.SpatialRenderer::new(bank, 48000, front, 0.0, 64)
+  let input = [1.0, 0.0]
+  let left = Array::make(2, 0.0)
+  let right = Array::make(2, 0.0)
+  renderer.process_into(input, left, right)
+}
+~~~
 
-## 自己制作一个场景
+- x 向右、y 向前、z 向上。声源方向以听者位置为原点，由宿主从世界坐标计算。听者水平朝向以弧度表示，从 +y 转向 +x 为正。
+- `set_pose` 更新下一个采样点起的目标。同一次淡化期间保留最新请求，完成后从下一帧启动后续淡化。
+- `process_into` 接收三个长度相同、彼此独立的数组。不同调用可以使用不同块长，按顺序保留滤波历史。空输入块不推进时间。
+- `finish_into` 结束输入，分次填充输出数组的前缀，并返回本次写入帧数。有非空输入时总尾音长度为抽头数减一。尾音排完返回 0。`reset` 清空尾音、过渡和历史，立即选择新的初始方向。
+- 测量库作用于一个采样率，调用端负责必要的重采样。当前使用最邻近方向匹配和输出淡化，听者朝向支持水平偏航。参数和状态边界见 API 源码。
 
-复制 `examples/drama/scene.json`。每条轨道有名称、WAV 路径、入点毫秒、线性增益和源内方向关键帧。路径相对于场景文件。第一个关键帧在 0 毫秒，后续时间递增。新项目方向坐标为 x 向右、y 向前、z 向上，原向量会归一化。
+## 复现两个独立宿主
 
-输入为单声道 16 位 PCM WAV，采样率需与 HRIR 文件一致。样例使用 48 kHz 和四个实测方向。每次混音最多 16 个源，输出上限 1,440,000 帧，含 FIR 尾部。卷积按样本数与抽头数限制工作量，滤波器切换时同一段历史供两套滤波器淡化。适用范围是固定听者方向的离线预览与混音，方向分辨率取决于测量集与听者。
+安装 MoonBit、Node.js 22 或以上、Python 3 和 Chromium 系浏览器。在仓库根目录执行，按本机情况替换浏览器路径。
 
-## 库接口与验证
+~~~sh
+python scripts/verify_spatial_hosts.py --browser /path/to/chromium
+~~~
 
-```sh
-moon add btlqql/moon_binaural@0.4.1
-moon test --target js --deny-warn
-python scripts/verify.py
-```
+默认从 MoonCakes 获取 0.5.0，分别构建两个外部 MoonBit 工程。追加 `--local` 可改用当前源码；追加 `--output` 可指定报告与浏览器演示目录。脚本同时生成 `spatial-hosts.json` 和 `browser-app/`。通过浏览器的 [AudioWorklet](https://www.w3.org/TR/webaudio/#AudioWorklet) 接入实测 HRIR，可复现水平转向后的双耳输出；另一个示例从 Node.js 宿主读取 PCM，按多种块长处理并写出尾音。
 
-本轮新增 `render_reviewed_comparison`，在 `render_comparison` 的混音基础上提供超幅定位。旧接口及采样数组 JSON CLI 保持兼容。WAV 解析、卷积、声像和质量统计均由 MoonBit 实现，Node 负责文件读写和 PCM 封装。
+本地脚本生成浏览器页面后，可从仓库根目录另开终端运行 `python -m http.server 8000 --bind 127.0.0.1 --directory _build/spatial-hosts/browser-app`，在浏览器打开 `http://127.0.0.1:8000`。点击 Start beacon，拖动朝向滑块并用耳机试听。脚本对离线渲染结果做数值核对，手工页面用于交互操作。
 
-[验证记录](docs/VALIDATION.md) · [生态对照](docs/ECOSYSTEM.md) · [来源与许可](THIRD_PARTY.md) · [完整申报书](docs/proposal.md) · [一页项目说明](docs/proposal-summary.md)
+## 兼容性与交付入口
+
+0.4.x 的 `Renderer`、场景 JSON CLI、录音样片及配平前超幅诊断接口继续保留。可运行 `python scripts/verify.py` 执行原有独立验证。 [旧场景示例](examples/drama/README.md) · [验证记录](docs/VALIDATION.md) · [生态对照](docs/ECOSYSTEM.md) · [来源与许可](THIRD_PARTY.md)
+
+[简版申报书](docs/proposal.md) · [一页说明](docs/proposal-summary.md) · [GitHub v0.5.0](https://github.com/btlqql/moon-binaural/releases/tag/v0.5.0) · [MoonCakes 0.5.0](https://mooncakes.io/docs/btlqql/moon_binaural@0.5.0)

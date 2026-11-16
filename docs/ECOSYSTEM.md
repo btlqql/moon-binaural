@@ -1,9 +1,10 @@
-# 与相邻项目的职责对照
+# 生态职责对照
 
-| 项目 | 主要职责 | MoonBinaural 本轮交付 |
-|---|---|---|
-| Steam Audio | 游戏及 VR 的空间音频 SDK，含 HRTF 双耳渲染 | 用可保存的场景文件批量导入录音，产出双耳/声像对照、可定位的超幅区间和修改后的成品 |
-| roomacoustics | 基于房间脉冲响应的声学指标分析 | 根据源方向及其变化渲染两耳时间信号 |
-| MoonWavKit 等 WAV 工具 | 容器与音频文件处理 | PCM16 读取接到多轨时间轴、HRIR 渲染和制作流程，格式读取作为支撑能力 |
+| 项目 | 公开能力 | 本项目的对应范围 |
+| --- | --- | --- |
+| Steam Audio | 成熟空间音频 SDK，公开接口支持 HRTF 点声源、应用到音频缓冲区及读取尾音。 [官方 C API](https://valvesoftware.github.io/steam-audio/doc/capi/binaural-effect.html) | 提供原生 MoonBit 的单声道转双耳节点、可变块长 PCM 接口和方向更新规则。 |
+| `dowdiness/moondsp` | MoonBit 的信号图、声部调度和浏览器 AudioWorklet 运行时。 [MoonCakes](https://mooncakes.io/docs/dowdiness/moondsp) | 提供单个空间处理节点，由宿主决定图结构、调度和播放。 |
+| `2227057182/moonbit-dsp` | 提供通用 FFT、卷积、数字滤波与统计。 [MoonCakes](https://mooncakes.io/docs/2227057182/moonbit-dsp@0.1.0) | 以两个实测耳通道、三维方向和听者偏航建立测量选择与跨块滤波状态。 |
+| `zmjknn/moon_sfx` | 提供音效生成、立体声等功率声像、多轨游戏混音和 WAV。 [MoonCakes](https://mooncakes.io/docs/zmjknn/moon_sfx) | 根据宿主给定的世界空间方向和听者水平朝向输出两耳信号。 |
 
-比较基于公开资料中的用途与接口。HRTF 卷积与声像采用已有方法，本轮新增价值是 MoonBit 内核与离线创作工作流的结合。 [Steam Audio](https://valvesoftware.github.io/steam-audio/doc/capi/binaural-effect.html) · [roomacoustics](https://github.com/AYHEY001/roomacoustics)
+HRIR 卷积、方向点积和滤波输出淡化使用已有方法。0.5.0 的实现范围是预分配输出缓冲区、具有明确快速更新语义的跨块渲染、可分段排出的尾音，以及通过同一公开接口运行的两个独立宿主。 [空间 API](../spatial.mbt) · [来源与许可](../THIRD_PARTY.md)
