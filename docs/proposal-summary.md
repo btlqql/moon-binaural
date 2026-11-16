@@ -1,16 +1,9 @@
-# MoonBinaural 一页项目说明
+# MoonBinaural 0.5.0 项目说明
 
-**用 MoonBit 定位并返修有声剧混音超幅 · 0.4.1**
+**MoonBit 可嵌入的分块空间音频渲染库** · `btlqql` · Apache-2.0
 
-独立有声剧制作人导入对白、脚步和门声的单声道 WAV，用场景文件记录入点、方向和增益。报告定位配平前的超幅时间、耳道和峰值处分轨贡献，制作人可以调整指定轨道并重渲染复核。工具同时导出双耳混音和普通声像对照。
+游戏音频、浏览器交互和离线音频处理可以调用同一个接口完成单声道到左右耳转换。宿主提供 PCM、声源相对方向和听者水平朝向，库选取实测 HRIR，将结果写入宿主已分配的数组。跨块保留卷积历史，方向变更保持滤波输出淡化。快速变向保留最新请求，可分段排出 FIR 尾音，并将节点重置为新的初始化姿态。
 
-《走廊》使用三段公开录音，生成约 15.5 秒的成品。故障样例在左耳约 7.802 秒出现最强峰值，报告指向脚步轨。只将该轨增益从 10.0 调至 1.6，配平前超幅耳样本由 8 个降至 0，峰值从 1.1572 降至 0.7279。前后报告和试听文件可下载复查。
+浏览器示例在 AudioWorklet 内调用该 API。离线示例以不规则块长处理外部 PCM，并把输出和尾音与独立直接卷积核对。两个宿主共用实测四方向 HRIR，样例数据采样率 48 kHz，每耳 256 抽头。旧《走廊》工程及配平前超幅诊断继续提供离线兼容样例。
 
-WAV 解码、实测 HRIR 卷积、方向切换、声像与超幅检查由 MoonBit 实现。当前面向同采样率 PCM16 素材和固定头向的离线制作，数值验证与耳机试听分别提供，真人定位效果仍待听测。
-
-```sh
-moon run cmd/main --target js -- project examples/drama/scene-overload.json _build/drama-overload
-moon run cmd/main --target js -- project examples/drama/scene.json _build/drama-repair
-```
-
-[GitHub](https://github.com/btlqql/moon-binaural) · [MoonCakes 0.4.1](https://mooncakes.io/docs/btlqql/moon_binaural@0.4.1) · [报告与试听附件](https://github.com/btlqql/moon-binaural/releases/tag/v0.4.1) · [完整申报书](proposal.md)
+初审反馈针对旧有声剧流程的狭窄使用范围。0.5.0 的新增交付是可嵌入空间节点、明确的流处理状态和独立宿主验证。公开材料包含代码、固定版依赖、运行说明、测试及素材出处。 [GitHub](https://github.com/btlqql/moon-binaural) · [v0.5.0 版本入口](https://github.com/btlqql/moon-binaural/releases/tag/v0.5.0) · [MoonCakes 0.5.0](https://mooncakes.io/docs/btlqql/moon_binaural@0.5.0) · [验证说明](VALIDATION.md)
